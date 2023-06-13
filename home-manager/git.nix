@@ -9,8 +9,16 @@ in {
 			programs.git = {
 				enable = true;
 				userName = "JodiMcJodson";
-				userEmail = "isekgood@gmail.com";
-			};
+        userEmail = "isekgood@gmail.com";
+        extraConfig = ''
+        [credential "https://github.com"]
+        helper = 
+        helper = !/etc/profiles/per-user/jodi/bin/gh auth git-credential
+        [credential "https://gist.github.com"]
+        helper = 
+        helper = !/etc/profiles/per-user/jodi/bin/gh auth git-credential
+        '';
+      };
 		};
 	};
 }

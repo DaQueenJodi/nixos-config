@@ -27,10 +27,6 @@ in
       ];
     };
 
-    nix.nixPath = [
-      "nixos-config=/hdd/Documents/nixos/configuration.nix"
-    ];
-
     nixpkgs.config = {
       allowUnfree = true;
     };
@@ -84,22 +80,30 @@ users.users.jodi = {
     (writeShellScriptBin "gtk-launch" ''
     ${pkgs.gtk3}/bin/gtk-launch $@
     '')
-    openvpn
-    firefox
+    chromium
     pavucontrol
     pamixer
     clang
     pfetch
     qbittorrent
-    neovim
     alacritty
     weechat
     i2p
-    bottles
     rofi
     github-cli
-
+    
+    calibre
+    tuxpaint
     prismlauncher
+    (space-cadet-pinball.overrideAttrs (old: {
+      src = fetchFromGitHub {
+        owner = "k4zmu2a";
+        repo = "SpaceCadetPinball";
+        rev = "e466bba";
+        sha256 = "73f88GfRSFVDO2xiTGZDUjRK5QaI5aUrHsd2CozzFUs=";
+      };
+      patches = [];
+    }))
   ];
 };
 
@@ -109,9 +113,22 @@ home = {
   #  enable = true;
   #  server = true;
   #};
+  vim.enable = true;
   git.enable = true;
   zsh.enable = true;
   sway.enable = true;
+};
+
+modules.scripts.menu = {
+  enable = true;
+  package = pkgs.rofi;
+  args = "-dmenu -i";
+  vpn = {
+    auth = {
+      username = "gene.dymarskiy@gmail.com";
+      password = "Gagarin2332";
+    };
+  };
 };
 
 # List packages installed in system profile. To search, run:
@@ -140,7 +157,7 @@ services = {
   };
   minecraft-server = {
     package = pkgs.papermc;
-    enable = true;
+    enable = false;
     openFirewall = true;
     eula = true;
   };
@@ -203,8 +220,8 @@ services.xserver.deviceSection = ''
 '';
 
 environment.variables = {
-  EDITOR = "nvim";
-  VISUAL = "nvim";
+  EDITOR = "vi";
+  VISUAL = "vi";
   WINIT_X11_SCALE_FACTOR = "1.0";
 };
 

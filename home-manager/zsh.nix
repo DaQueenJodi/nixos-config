@@ -20,10 +20,10 @@ in {
 					save = 10000;
 				};
 				shellAliases = {
-					ls = "ls --color=auto";
+          ls = "ls --color=auto";
+          penis = "xdg-open https://youtube.com &disown &> /dev/null";
 				};
 				shellGlobalAliases = {
-					vim = "nvim";
 					"..." = "../..";
 				};
 				initExtra = ''
