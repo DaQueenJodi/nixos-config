@@ -1,65 +1,76 @@
 {lib, config, pkgs, ...}:
 with lib;
 let
-	cfg = config.home.vim;
+  cfg = config.home.vim;
+  concatLines = builtins.concatStringsSep "\n";
   tabwidth = "2";
+  modeMappings = {
+    normal = "nnoremap";
+    visual = "vnoremap";
+    command = "cnoremap";
+  };
+  pluginType = mkOptionType {
+    name = "plugin";
+    check = (x: isDerivation x || (isAttrs x && x ? cfg && x ? pkg ));
+  };
 in {
-  options.home.vim.enable = mkEnableOption "vim";
-	config = mkIf cfg.enable {
-		home-manager.users.jodi = {pkgs,...}: {
-			programs.vim = {
-				enable = true;
-				plugins = with pkgs.vimPlugins; [
-					zig-vim
-          vim-nix
-          gruvbox
-        ];
-        
+  options.home.vim = {
+    enable = mkEnableOption "vim";
+    extraConfig = mkOption {
+      type = types.str;
+      default = "";
+    };
+    plugins = mkOption {
+      type = types.listOf pluginType;
+      default = [];
+    };
+    mappings = mkOption {
+      type = types.attrs;
+      default = {};
+    };
+    options = mkOption {
+      type = types.attrs;
+      default = {};
+    };
+  };
+  config = mkIf cfg.enable {
+    home-manager.users.jodi = {pkgs,...}: {
+      programs.vim = {
+        enable = true;
+        plugins = (map (x: (if (isDerivation x) then x else x.pkg)) cfg.plugins);
+
         extraConfig = ''
-          set nocompatible
-          filetype plugin indent on
-          syntax on
-
-          set background=dark
-          colorscheme gruvbox
-          let g:gruvbox_italics = 0
-          let g:gruvbox_italicize_strings = 0
-
-          set shiftwidth=${tabwidth}
-          set tabstop=${tabwidth}
-
-          set nobackup undofile
-          set undodir=$HOME/.vim/undo
           ${
-            # map C-c to work as Esc in all modes
-            builtins.concatStringsSep "\n"
-            (map (x: x + "noremap <C-c> <Esc>") ["i" "c" "v" "n"])
+            concatLines
+            (map (x: x.cfg or "") cfg.plugins)
           }
-
-          set ignorecase hlsearch incsearch lazyredraw
-          set encoding=utf-8
-          set wrap linebreak
-          set ruler relativenumber
-          set noerrorbells novisualbell
-          set confirm
-          set history=500
-          set magic
-          
-          nmap <C-u> <C-u>zz
-          nmap <C-d> <C-d>zz
-
-
-          cnoremap <C-p> <Up>
-          cnoremap <C-n> <Down>
-          cnoremap <C-b> <Left>
-          cnoremap <C-f> <Right>
-
-          noremap <silent> [b :bprevious<CR>
-          noremap <silent> ]b :bnext<CR>
-          noremap <silent> [B :bfirst<CR>
-          noremap <silent> ]B :blast<CR>
-
-          cnoremap <expr> %% getcmdtype() == ':' ? expand('%:h').'/' : '%%'
+          ${
+            "set " +
+            (builtins.concatStringsSep " "
+            (mapAttrsToList (n: v: 
+            (let
+              prefix = if (isBool v && v == false) then "no" else "";
+              suffix = if (isBool v) then "" else "=${toString v}";
+            in
+              "${prefix}${n}${suffix}"))
+            cfg.options))
+          }
+          ${
+            let
+              all = cfg.mappings.all or {};
+              visual = cfg.mappings.visual or {};
+              normal = cfg.mappings.normal or {};
+              command = cfg.mappings.command or {};
+              f = (mode: key: act: "${getAttr mode modeMappings} ${key} ${act}");
+            in
+              concatLines 
+              (builtins.concatLists [
+                (mapAttrsToList (k: a: f "normal" k a) (recursiveUpdate normal all))
+                (mapAttrsToList (k: a: f "visual" k a) (recursiveUpdate visual all))
+                (mapAttrsToList (k: a: f "command" k a) (recursiveUpdate command all))
+              ])
+          }
+          ${cfg.extraConfig}
         '';
 			};
 		};

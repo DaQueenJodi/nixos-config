@@ -1,0 +1,29 @@
+error: syntax error, unexpected ELSE, expecting THEN
+
+       at /hdd/Documents/nixos/home-manager/vim.nix:32:51:
+
+           31|         enable = true;
+           32|         plugins = (map (x: (if (isDerivation x) x else x.pkg)) cfg.plugins);
+             |                                                   ^
+           33|
+(use '--show-trace' to show detailed location information)
+building Nix...
+error: syntax error, unexpected ELSE, expecting THEN
+
+       at /hdd/Documents/nixos/home-manager/vim.nix:32:51:
+
+           31|         enable = true;
+           32|         plugins = (map (x: (if (isDerivation x) x else x.pkg)) cfg.plugins);
+             |                                                   ^
+           33|
+(use '--show-trace' to show detailed location information)
+building the system configuration...
+error: syntax error, unexpected ELSE, expecting THEN
+
+       at /hdd/Documents/nixos/home-manager/vim.nix:32:51:
+
+           31|         enable = true;
+           32|         plugins = (map (x: (if (isDerivation x) x else x.pkg)) cfg.plugins);
+             |                                                   ^
+           33|
+(use '--show-trace' to show detailed location information)

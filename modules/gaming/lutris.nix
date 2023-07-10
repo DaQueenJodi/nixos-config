@@ -15,7 +15,6 @@ in {
   config = mkIf cfg.enable {
     environment.systemPackages = with pkgs; [
       (if cfg.unstable then unstable.lutris else lutris)
-      (if cfg.unstable then unstable.wineWowPackages.full else wineWowPackages.full)
     ];
   };
 }

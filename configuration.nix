@@ -34,9 +34,16 @@ in
 
 
 # Bootloader.
-boot.loader.systemd-boot.enable = true;
+boot.loader.systemd-boot = {
+  enable = true;
+  configurationLimit = 4;
+};
 boot.loader.efi.canTouchEfiVariables = false;
 boot.loader.efi.efiSysMountPoint = "/boot/efi";
+
+
+# makes boot times slightly faster
+boot.initrd.systemd.enable = true;
 
 networking.hostName = "jodi-pc"; # Define your hostname.
 networking.wireless.iwd.enable = true;
@@ -81,6 +88,9 @@ users.users.jodi = {
     ${pkgs.gtk3}/bin/gtk-launch $@
     '')
     chromium
+		obs-studio
+		gimp
+    neovim
     pavucontrol
     pamixer
     clang
@@ -91,10 +101,15 @@ users.users.jodi = {
     i2p
     rofi
     github-cli
-    
+
+    renderdoc
+    gimp
+    gzdoom
+    aseprite
     calibre
     tuxpaint
     prismlauncher
+    gnome.aisleriot
     (space-cadet-pinball.overrideAttrs (old: {
       src = fetchFromGitHub {
         owner = "k4zmu2a";
@@ -109,11 +124,72 @@ users.users.jodi = {
 
 home = {
   enable = true;
-  #foot = {
-  #  enable = true;
-  #  server = true;
-  #};
-  vim.enable = true;
+  /*
+  foot = {
+    enable = true;
+    server = true;
+  };
+  */
+  vim = {
+    enable = false;
+    plugins = with pkgs.vimPlugins; [
+      { pkg = rainbow; cfg = "let g:rainbow_active = 1"; }
+      { pkg = gruvbox; cfg = ''
+        set background=dark
+        let g:gruvbox_italics = 0
+        let g:gruvbox_italicize_strings = 0
+        colorscheme gruvbox
+      '';}
+      # vim-nix
+      { pkg = zig-vim; cfg = "let g:zig_fmt_autosave = 0"; }
+      { pkg = vim-polyglot; cfg = "let g:polyglot_disabled = ['sensible']"; }
+  ];
+    mappings = {
+      normal = {
+        "<C-u" = "<C-u>zz";
+        "<C-d" = "<C-d>zz";
+        "gb" = ":bnext<CR>";
+        "gB" = ":bprevious<CR>";
+        "gn" = ":next<CR>";
+        "gN" = ":previous<CR>";
+        "<C-x>" = ":shell<CR>";
+      };
+      command = {
+        "<C-p>" = "<Up>";
+        "<C-n>" = "<Down>";
+        "<C-b>" = "<Left>";
+        "<C-f>" = "<Right>";
+      };
+      all = {
+        "<C-c>" = "<Esc>";
+      };
+    };
+    options = {
+      shell = "zsh"; # because nix-shell makes it change to bash
+      compatible = false;
+      showcmd = true;
+      wrap = false;
+      shiftwidth = 2;
+      tabstop = 2;
+      backup = false;
+      undofile = false;
+      undodir = "$HOME/.vim/undo";
+      ignorecase = true;
+      incsearch = true;
+      lazyredraw = true;
+      ruler = true;
+      relativenumber = true;
+      errorbells = false;
+      visualbell = false;
+      history = 500;
+      magic = true;
+    };
+    extraConfig = ''
+      syntax on
+      filetype plugin indent on
+      cnoremap <expr> %% getcmdtype() == ':' ? expand('%:h').'/' : %%
+    '';
+  };
   git.enable = true;
   zsh.enable = true;
   sway.enable = true;
@@ -122,7 +198,7 @@ home = {
 modules.scripts.menu = {
   enable = true;
   package = pkgs.rofi;
-  args = "-dmenu -i";
+  args = "-monitor -1 -dmenu -i";
   vpn = {
     auth = {
       username = "gene.dymarskiy@gmail.com";
@@ -133,16 +209,43 @@ modules.scripts.menu = {
 
 # List packages installed in system profile. To search, run:
 environment.systemPackages = with pkgs; [
-  killall
-  wget
-  curl
-  git
-  python3
-  vulkan-loader
-  vulkan-tools
-  file
-];
+  (stdenv.mkDerivation rec {
+    name = "vulkan-manpages";
+    src = fetchurl {
+    url = "https://github.com/haxpor/Vulkan-Docs/releases/download/v1.2.140/v1.2.140-manpages.zip";
+    sha256 = "0XiBGili8Sm0K0MA1jB1Wb52lnJTfecsOyfGy7jd+Os=";
+    };
+    unpackPhase = ''
+    ${pkgs.unzip}/bin/unzip $src
+    '';
+    installPhase = ''
+    mkdir -p $out/share/man/man3
+    cp *.3 $out/share/man/man3/
+    '';
+    outputs = [ "out" ];
+    })
+    killall
+    wget
+    curl
+    git
+    python3
+    vulkan-loader
+    vulkan-tools
+    file
 
+  man-pages
+  man-pages-posix
+];
+documentation = {
+  enable = true;
+  doc.enable = true;
+  dev.enable = true;
+  man.enable = true;
+};
+environment.extraOutputsToInstall = [
+  "doc"
+  "devdoc"
+];
 # FONTS
 fonts.fonts = with pkgs; [
 
@@ -209,8 +312,8 @@ services.pipewire = {
 modules.gaming = {
   enable = true;
   lutris = {
-    enable = false;
-    unstable = true;
+    enable = true;
+    unstable = false;
   };
   steam.enable = true;
 };
@@ -232,6 +335,6 @@ environment.variables = {
 # this value at the release version of the first install of this system.
 # Before changing this value read the documentation for this option
 # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-system.stateVersion = "22.11"; # Did you read the comment?
+system.stateVersion = "23.05"; # Did you read the comment?
 
 }

@@ -21,12 +21,14 @@ in {
 				};
 				shellAliases = {
           ls = "ls --color=auto";
+					vim = "nvim";
           penis = "xdg-open https://youtube.com &disown &> /dev/null";
 				};
 				shellGlobalAliases = {
 					"..." = "../..";
 				};
 				initExtra = ''
+				PATH="/home/jodi/.local/bin:$PATH"
 				setopt PROMPT_SUBST
 				function nz {
 					nix-shell $@ --run zsh
